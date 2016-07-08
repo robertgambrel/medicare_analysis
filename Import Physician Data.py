@@ -76,5 +76,8 @@ opiate_matches = scripts.generic_name.str.contains("OXYCODONE|CODEINE|FENTANYL|H
 
 opiate_scripts = scripts[opiate_matches]
 
+test = scripts.query(scripts.generic_name.str.contains("OXYCODONE|CODEINE|FENTANYL|HYDROCODONE|HYDROMORPHONE|MEPERIDINE|METHADONE|MORPHINE", regex = True,
+                                                   na = False))
+
 
 
