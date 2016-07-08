@@ -6,16 +6,25 @@ Import tab-delineated Medicare data
 import pandas as pd
 import numpy as np
 import os
+import sys
 import re
+import sqlite3
 
 if os.name == 'nt':
-    docs = pd.read_table('.\\medicare_analysis\\Data\\Medicare_Provider_Util_Payment_PUF_CY2014.txt',
+    docs = pd.read_table('.\\medicare_analysis\\Data\\'                
+    'Medicare_Provider_Util_Payment_PUF_CY2014.txt',
                          skiprows=3)
     scripts = pd.read_table('.\\medicare_analysis\\Data\\PARTD_PRESCRIBER_PUF_NPI_DRUG_13.tab',
                          skiprows=1)
 else:
-    docs = pd.read_table('Data/Medicare_Provider_Util_Payment_PUF_CY2014.txt',
+    docs = pd.read_table('/Users/healthpolicyanalyst/Documents/Box Sync/python/Medicare Analyses/'
+    'medicare_analysis/Data/Medicare_Provider_Util_Payment_PUF_CY2014.txt',
                          skiprows = 3)
+    scripts = pd.read_table('/Users/healthpolicyanalyst/Documents/Box Sync/python/'
+    'Medicare Analyses/medicare_analysis/Data/PARTD_PRESCRIBER_PUF_NPI_DRUG_13.tab',
+    skiprows = 1)
+    conn = sqlite3.connect('/Users/healthpolicyanalyst/Documents/Box Sync/python/'
+    'Medicare Analyses/medicare_analysis/Data/medicare_data.db')
 
 
 
@@ -66,6 +75,14 @@ scripts.columns = ['npi',
                    'ge65_redact_flag',
                    'total_day_supply_ge65',
                    'total_drug_cost_ge65']
+
+
+# this is big and cumbersome, so put into sqlite database
+c = conn.cursor()
+docs.to_sql('docs', conn)
+scripts.to_sql('scripts', conn)
+
+
 
 any(re.match("OXYCODONE|CODEINE|FENTANYL|HYDROCODONE|HYDROMORPHONE|MEPERIDINE|METHADONE|MORPHINE", x)
     for x in scripts['generic_name'].head(10000))
