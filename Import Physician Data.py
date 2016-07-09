@@ -1,6 +1,6 @@
 """
 Robert Gambrel - July 2016
-Import tab-delineated Medicare data
+Import tab-delineated Medicare data from website, extract to a sqlite db
 """
 
 import pandas as pd
@@ -9,24 +9,43 @@ import os
 import sys
 import re
 import sqlite3
+import io
+import requests
+from zipfile import ZipFile
 
-if os.name == 'nt':
-    docs = pd.read_table('.\\medicare_analysis\\Data\\'                
-    'Medicare_Provider_Util_Payment_PUF_CY2014.txt',
-                         skiprows=3)
-    scripts = pd.read_table('.\\medicare_analysis\\Data\\PARTD_PRESCRIBER_PUF_NPI_DRUG_13.tab',
-                         skiprows=1)
-else:
-    docs = pd.read_table('/Users/healthpolicyanalyst/Documents/Box Sync/python/Medicare Analyses/'
-    'medicare_analysis/Data/Medicare_Provider_Util_Payment_PUF_CY2014.txt',
-                         skiprows = 3)
-    scripts = pd.read_table('/Users/healthpolicyanalyst/Documents/Box Sync/python/'
-    'Medicare Analyses/medicare_analysis/Data/PARTD_PRESCRIBER_PUF_NPI_DRUG_13.tab',
-    skiprows = 1)
-    conn = sqlite3.connect('/Users/healthpolicyanalyst/Documents/Box Sync/python/'
-    'Medicare Analyses/medicare_analysis/Data/medicare_data.db')
+os.chdir(
+    "/Users/healthpolicyanalyst/Documents/Box Sync/python/"
+    "Medicare Analyses/medicare_analysis/Data")
+
+# download zip file, extract the portion we want, make it a pandas database
+docs_request = requests.get('http://download.cms.gov/Research-Statistics-Data-and-Systems/Statistics-Trends-and-Reports/Medicare-Provider-Charge-Data/Downloads/Medicare_Provider_Util_Payment_PUF_CY2013.zip')
+docs_file = ZipFile(io.BytesIO(docs_request.content))
+docs_file.namelist()
+# for docs file, find the txt document
+regex_search = re.compile(".*txt")
+# get the name - search through the list, should produce a 1 element list
+docs_name =  [m.group(0) for l in docs_file.namelist() for m in [
+    regex_search.search(l)] if m][0]
+docs_txt = docs_file.extract(docs_name)
+
+docs = pd.read_table(docs_txt, skiprows = 3)
 
 
+# repeat for prescriber file
+scripts_request = requests.get('http://download.cms.gov/Research-Statistics-Data-'
+                               'and-Systems/Statistics-Trends-and-Reports/Medicare-'
+                               'Provider-Charge-Data/Downloads/'
+                               'PartD_Prescriber_PUF_NPI_DRUG_13.zip')
+scripts_file = ZipFile(io.BytesIO(scripts_request.content))
+scripts_file.namelist()
+# for scripts file, find the txt document
+regex_search = re.compile(".*tab")
+# get the name - search through the list, should produce a 1 element list
+scripts_name = [m.group(0) for l in scripts_file.namelist() for m in [
+    regex_search.search(l)] if m][0]
+scripts_txt = scripts_file.extract(scripts_name)
+
+scripts = pd.read_table(scripts_txt, skiprows=1)
 
 
 docs.columns = ['npi',
