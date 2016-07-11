@@ -4,9 +4,7 @@ Import tab-delineated Medicare data from website, extract to a sqlite db
 """
 
 import pandas as pd
-import numpy as np
 import os
-import sys
 import re
 import sqlite3
 import io
@@ -95,11 +93,18 @@ scripts.columns = ['npi',
                    'total_day_supply_ge65',
                    'total_drug_cost_ge65']
 
+conn = sqlite3.connect('medicare_data.db')
 
 # this is big and cumbersome, so put into sqlite database
 c = conn.cursor()
 docs.to_sql('docs', conn)
 scripts.to_sql('scripts', conn)
+
+# check that they're in there correctly
+c.execute("SELECT name FROM sqlite_master WHERE type='table';")
+print(c.fetchall())
+conn.commit()
+conn.close()
 
 
 
